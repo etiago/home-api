@@ -1,0 +1,4 @@
+{:api-key "REPLACE_ME"
+ :urls
+ {:front
+  {:enable "ADD_A_URL"}}}
