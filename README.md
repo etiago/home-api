@@ -12,7 +12,7 @@ The ```home-api``` project makes use of Leiningen. Before you start, be sure to 
 
 Afterwards create a ```resources/``` folder and place a ```config.edn``` file in it. Its contents should be as follows:
 
-```
+```clojure
 {:api-key "Here you will generate a random hash which you need to suply in the query string."
  :urls
  {:front
@@ -24,7 +24,7 @@ Afterwards create a ```resources/``` folder and place a ```config.edn``` file in
 ```
 
 Keep in mind that you can specify more map keys values in the ```:urls``` map and these will automatically be available in your REST API. For example, the following is also valid:
-```
+```clojure
 {:api-key "YOUR_RANDOMLY_GENERATED_KEY"
  :urls
  {:front
@@ -43,5 +43,5 @@ Once you have your configuration in place, you can start the server with ```lein
 
 ## License
 
-Copyright © 2016 Tiago Espinha
+Copyright Â© 2016 Tiago Espinha
 
