@@ -1,4 +1,38 @@
 {:api-key "REPLACE_ME"
- :urls
- {:front
-  {:enable "ADD_A_URL"}}}
+ :lights
+ {:bridge-host "HOST_OF_HUE_BRIDGE"
+  :bridge-key "HUE_BRIDGE_API_KEY"
+  :name-to-id
+  {:entrance-light "MAC_ADDRESS"
+   :kitchen-light-counter "MAC_ADDRESS"
+   :kitchen-light-ceiling "MAC_ADDRESS"
+   :add-as-many-lights-as-you-want "AND_MAP_THEM_TO_THE_MAC_ADDRESS"}
+  :group-to-name ;; here you can define groups of names defined above, for convenience!
+  {:all #{:entrance-light
+          :kitchen-light-counter
+          :kitchen-light-ceiling}
+   :kitchen-all #{:kitchen-light-counter
+                  :kitchen-light-ceiling}}}
+ :cameras
+ {:porch
+  {:brand :dlink
+   :model :dcs-935l ;; from dlink, only the dcs-935l is supported for now
+   :ip "IP_ADDRESS_OF_CAMERA"
+   :username "USERNAME"
+   :password "PASSWORD"
+   :form-params ;; fixed format
+   {:enable {:enable "yes"
+             :mbmask "00000000000000000000000000000000000000000000000000000000000000FFFFFF0000FFFFFF0000FFFFFF0000FFFFFF0000FFFFFF0000FFFFFF0000FFFFFF0000FFFFFF0000FFFFFF0000FFFFFF0000FFFFFF0000FFFFFF0000FFFFFF0000FFFFFF0000FFFFFF0000FFFFFF0000FFFFFF0000FFFFFF00000000000000000000000000000000000000000000000000000000000000"
+             :sensitivity "20"}
+    :disable {:enable "no"
+              :mbmask "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"}}}
+  :back
+  {:brand :foscam
+   :model :fi9821w ;; from foscam, only cameras which support CGIProxy
+   :enable "http://192.168.1.125:88/cgi-bin/CGIProxy.fcgi?cmd=setMotionDetectConfig&usr=INSERT_YOUR_USERNAME_HERE&pwd=INSERT_YOUR_PASSWORD_HERE&isEnable=1&linkage=14&snapInterval=1&sensitivity=1&triggerInterval=0&schedule0=281474976710655&schedule1=281474976710655&schedule2=281474976710655&schedule3=281474976710655&schedule4=281474976710655&schedule5=281474976710655&schedule6=281474976710655&area0=0&area1=12&area2=8&area3=8&area4=24&area5=80&area6=112&area7=0&area8=0&area9=0"
+   :disable "http://192.168.1.125:88/cgi-bin/CGIProxy.fcgi?cmd=setMotionDetectConfig&usr=INSERT_YOUR_USERNAME_HERE&pwd=INSERT_YOUR_PASSWORD_HERE&isEnable=0"
+   :status "http://192.168.1.125:88/cgi-bin/CGIProxy.fcgi?cmd=getMotionDetectConfig&usr=INSERT_YOUR_USERNAME_HERE&pwd=INSERT_YOUR_PASSWORD_HERE"}}
+ :camera-state-notifications ;; optional block for slack notifications of camera state
+ {:slack-token "INSERT_A_BOT_TOKEN"
+  :slack-channel-id "THE_CHANNEL_ID"
+  :slack-bot-username "THE_BOT_USERNAME"}}
