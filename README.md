@@ -1,6 +1,6 @@
 # home-api
 
-![Build Status](https://travis-ci.org/etiago/home-api.svg?branch=master)
+![Build Status](https://travis-ci.org/etiago/home-api.svg?branch=master) [![Dependency Status](https://www.versioneye.com/user/projects/57e430da6dfcd0003649cd22/badge.svg?style=flat-square)](https://www.versioneye.com/user/projects/57e430da6dfcd0003649cd22)
 
 This project was my first-ever project in Clojure. After having started to use emacs and elisp to customize my emacs, I thought I wanted to give functional programming a good and decent try. Clojure seemed like a good candidate since it harnesses the power of the JVM, has a great community behind it and... brackets galore! :smile: No, but seriously, it's a Lisp like elisp, but with the JVM behind it, what's not to like.
 
