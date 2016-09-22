@@ -10,12 +10,12 @@
   :profiles {:uberjar {:aot :all}}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/tools.logging "0.3.1"]
-                 [compojure "1.3.4"]
-                 [liberator "0.12.0"]
-                 [ring/ring-core "1.4.0"]
-                 [ring/ring-devel "1.4.0"]
-                 [ring/ring-jetty-adapter "1.4.0"]
-                 [clj-http "2.1.0"]
+                 [compojure "1.5.1"]
+                 [liberator "0.14.1"]
+                 [ring/ring-core "1.5.0"]
+                 [ring/ring-devel "1.5.0"]
+                 [ring/ring-jetty-adapter "1.5.0"]
+                 [clj-http "3.3.0"]
                  [slingshot "0.12.2"]
                  [org.tiago/dlink-camera-api "0.3.0"]
                  [org.julienxx/clj-slack "0.5.4"]])
