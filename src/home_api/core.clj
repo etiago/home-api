@@ -21,8 +21,11 @@
 
 (defn authorized?
   [config ctx]
-  (= (get-in config [:api-key])
-     (get-in ctx [:request :query-params "key"])))
+  (let [config-api-key (get-in config [:api-key])
+        ctx-api-key (get-in ctx [:request :query-params "key"])]
+    (and (some? config-api-key)
+         (some? ctx-api-key)
+         (= config-api-key ctx-api-key))))
 
 (defn- expand-single-light-group
   "Given a single group tuple [<name> <set>] and the name-to-id lookup
