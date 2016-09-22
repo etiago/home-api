@@ -26,3 +26,25 @@
            (authorized? {}
                         empty-query))))))
 
+
+;; Expose private functions
+(def expand-single-light-group #'home-api.core/expand-single-light-group)
+
+(deftest single-group-expansion-in-config
+  (testing "Single light groups expansion in config files"
+    (is (=
+         {:foo #{"abc" "xyz"}}
+         (expand-single-light-group
+          [:foo #{:key-for-abc :key-for-xyz}]
+          {:key-for-abc "abc"
+           :key-for-xyz "xyz"})))
+    (is (=
+         {:foo #{"abc"}}
+          (expand-single-light-group
+           [:foo #{:key-for-abc :key-for-xyz}]
+           {:key-for-abc "abc"})))
+    (is (=
+         {:foo #{}}
+          (expand-single-light-group
+           [:foo #{:key-for-abc :key-for-xyz}]
+           {})))))
