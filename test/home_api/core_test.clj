@@ -26,5 +26,3 @@
            (authorized? {}
                         empty-query))))))
 
-
-;; (deftest 
