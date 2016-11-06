@@ -35,4 +35,16 @@
  :camera-state-notifications ;; optional block for slack notifications of camera state
  {:slack-token "INSERT_A_BOT_TOKEN"
   :slack-channel-id "THE_CHANNEL_ID"
-  :slack-bot-username "THE_BOT_USERNAME"}}
+  :slack-bot-username "THE_BOT_USERNAME"}
+ :commands
+ {:luis-language-to-endpoints
+  {:en "https://api.projectoxford.ai/luis/v1/application?id=REPLACE_ME&subscription-key=REPLACE_ME&q="
+   :cn "FILL_IN_FOR_MULTILANGUAGE_SUPPORT_WITH_MULTIPLE_MODELS"}
+  :luis-state-to-light-states
+  {:SwitchOnLights
+   {"Lights::Entrance" {:entrance-light {:on true :bri 254}}
+    "THIS_IS_THE_LUIS_ENTITY" {:mapped-to {:a "light state"}}}
+   :SwitchOffLights
+   {"Lights::Entrance" {:entrance-light {:on false}}
+    "THIS_IS_THE_LUIS_ENTITY" {:mapped-to {:a "light state"}}}
+   :This-Is-The-Luis-Intent {"mapped to entities" "and respective states"}}}}

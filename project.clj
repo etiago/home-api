@@ -13,6 +13,7 @@
                  [compojure "1.5.1"]
                  [liberator "0.14.1"]
                  [ring/ring-core "1.5.0"]
+                 [ring/ring-codec "1.0.1"]
                  [ring/ring-devel "1.5.0"]
                  [ring/ring-jetty-adapter "1.5.0"]
                  [clj-http "3.3.0"]

@@ -1,4 +1,9 @@
-(in-ns 'home-api.core)
+(ns home-api.lights.core
+  (:require
+   [clojure.data.json :as json]
+   [clj-http.client :as client]
+   [liberator.core :refer [resource defresource]]
+   [home-api.common-tools.core :as common-tools]))
 
 (defn get-bridge-host
   "Returns the bridge's host from config"
@@ -6,20 +11,23 @@
   (get-in config [:lights :bridge-host]))
 
 (defn get-bridge-key
+  "Returns the bridge's host key from config"
   [config]
   (get-in config [:lights :bridge-key]))
 
 (defn filter-light-data-by-ids
   "Returns true if light-id matches :uniqueid in the right element of the 
   light-tuple"
-  [light-ids light-tuple]
-  (contains? light-ids
+  [light-id-set light-tuple]
+  (contains? light-id-set
              (get (nth light-tuple 1) :uniqueid)))
 
-(defn get-lights-state-tuples
-  [bridge-host bridge-key light-ids]
+(defn get-lights-state-tuples-by-id
+  "Slice the Hue lights state and return a sequence with the states for the
+  light ids in the specified set. Essentially getting light states from ids."
+  [bridge-host bridge-key light-id-set]
   (filter
-   (partial filter-light-data-by-ids light-ids)
+   (partial filter-light-data-by-ids light-id-set)
    (json/read-str (get
                    (client/get
                     (str "http://" bridge-host "/api/" bridge-key "/lights"))
@@ -27,6 +35,8 @@
                   :key-fn keyword)))
 
 (defn get-hue-light-numbers
+  "From a sequence of light state tuples from Hue, return an array of their 
+  numbers."
   [light-states]
   (reduce
    (fn [numbers state]
@@ -35,6 +45,8 @@
    light-states))
 
 (defn light-is-on?
+  "Based on the light-states from Hue, return whether a light with the specified
+  number is on"
   [light-states light-number]
   (get-in
    (get
@@ -42,7 +54,9 @@
     (keyword light-number))
    [:state :on]))
 
-(defn change-light-state
+(defn send-request-to-hue
+  "Sends a request to Hue (pass in client/post or client/put) for a particular
+  light number, with the specified body"
   [light-number client-verb-fn bridge-host bridge-key request-body]
   (client-verb-fn
    (str
@@ -57,17 +71,17 @@
     (json/write-str request-body)}))
 
 (defn handle-light-request
-  [state-fn client-verb-fn config light-ids request-body]
+  [state-fn client-verb-fn config light-id-set request-body]
   (let [bridge-host (get-bridge-host config)
         bridge-key (get-bridge-key config)
-        light-states (get-lights-state-tuples
+        light-states (get-lights-state-tuples-by-id
                       bridge-host
                       bridge-key
-                      light-ids)]
+                      light-id-set)]
     (doseq
         [light-number (get-hue-light-numbers light-states)] 
       (future
-        (change-light-state
+        (send-request-to-hue
          light-number
          client-verb-fn
          bridge-host
@@ -75,26 +89,24 @@
          (merge (dissoc request-body :action)
                 {:on (state-fn (into {} light-states) light-number)}))))))
 
-(def light-request-callbacks
-  {:toggle (partial handle-light-request
-                    (fn [light-states light-number]
-                      (not (light-is-on? light-states light-number))))
-   :on (partial handle-light-request
-                (fn [_ _] true))
-   :off (partial handle-light-request
-                 (fn [_ _] false))})
+(def state-functions
+  {:toggle (fn [light-states light-number]
+                      (not (light-is-on? light-states light-number)))
+   :on (fn [_ _] true)
+   :off (fn [_ _] false)})
 
 (defn handle-light-resource-verb
   "Handles Liberators POST and PUT requests"
-  [client-verb-fn config callbacks ctx]
+  [client-verb-fn config ctx]
   (let [request-body (json/read-str
                       (slurp (get-in ctx [:request :body]))
                       :key-fn keyword)]
-    ((get callbacks
+    (handle-light-request
+     (get state-functions
           (keyword (get request-body :action)))
      client-verb-fn
      config
-     (get ctx :light-ids)
+     (get ctx :selected-light-id-set)
      request-body)))
 
 (defn get-light-ids-for-name
@@ -102,8 +114,10 @@
   [config name]
   (let [ids (get-in
              (conj
-              (get-in config [:lights :name-to-id])
-              (get-in config [:lights :group-to-name]))
+              (into {}
+                     (get-in config [:lights :name-to-id]))
+              (into {}
+                    (get-in config [:lights :group-to-name])))
              [(keyword name)])]
     (if (string? ids)
       (merge #{} ids)
@@ -112,12 +126,12 @@
 (defresource lights [config light-or-group-name]
   :allowed-methods [:post :put :get]
   :available-media-types ["text-html"]
-  :authorized? (partial authorized? config)
+  :authorized? (partial common-tools/authorized? config)
   :exists? (fn [ctx]
              (if-let [light-ids (get-light-ids-for-name
                                  config
                                  light-or-group-name)]
-               {:light-ids light-ids}))
+               {:selected-light-id-set light-ids}))
   :handle-exception (fn [_]
                       (json/write-str
                        {:result false
@@ -132,9 +146,7 @@
   :handle-ok (fn [ctx] (json/write-str {:result true}))
   :post! (partial handle-light-resource-verb
                   client/post
-                  config
-                  light-request-callbacks)
+                  config)
   :put! (partial handle-light-resource-verb
                  client/put
-                 config
-                 light-request-callbacks))
+                 config))

@@ -1,4 +1,13 @@
-(in-ns 'home-api.core)
+(ns home-api.cameras.core
+  (:require
+   clj-slack.chat
+   [clojure.data.json :as json]
+   [clojure.zip :as zip]
+   [clj-http.client :as client]
+   [liberator.core :refer [resource defresource]]
+   [home-api.common-tools.core :as common-tools]
+   [dlink-camera-api.core :as dlink-api]
+   [clojure.xml :as xml]))
 
 ;;Tiago: Couldn't find it in clj.zip so I just used it directly
 ;;convenience function, first seen at nakkaya.com later in clj.zip src
@@ -78,7 +87,7 @@
                        (partial handle-ok-without-notification action))]
     (resource
      :available-media-types ["text-html"]
-     :authorized? (partial authorized? config)
+     :authorized? (partial common-tools/authorized? config)
      :exists? (fn [ctx]
                 (if-let [camera-config
                          (get-camera-config-for-location config location)]

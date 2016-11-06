@@ -1,50 +1,68 @@
 (ns home-api.core-test
   (:require [clojure.test :refer :all]
-            [home-api.core :refer :all]))
-
-(deftest authorization-with-key-in-query-string
-  (testing "Verify key in HTTP query string against api-key in config"
-    (let [test-config {:api-key "foo"}
-          allowed-query {:request
-                         {:query-params
-                          {"key" (get test-config :api-key)}}}
-          not-allowed-query (assoc-in
-                             allowed-query
-                             [:request :query-params "key"] "foo2")
-          empty-query {:request
-                       {:query-params
-                        {}}}]
-      (is (authorized? test-config
-                       allowed-query))
-      (is (not
-           (authorized? test-config
-                        not-allowed-query)))
-      (is (not
-           (authorized? test-config
-                        empty-query)))
-      (is (not
-           (authorized? {}
-                        empty-query))))))
+            [home-api.core :refer :all]
+            [home-api.lights.core :refer :all]
+            [home-api.common-tools.core :refer :all]))
 
 
-;; Expose private functions
-(def expand-single-light-group #'home-api.core/expand-single-light-group)
 
-(deftest single-group-expansion-in-config
-  (testing "Single light groups expansion in config files"
+; - core_lights.clj
+
+(deftest pull-bridge-host-from-config
+  (testing "Pulling bridge host from the config"
     (is (=
-         {:foo #{"abc" "xyz"}}
-         (expand-single-light-group
-          [:foo #{:key-for-abc :key-for-xyz}]
-          {:key-for-abc "abc"
-           :key-for-xyz "xyz"})))
+         (get-bridge-host {:lights {:bridge-host "foo"}})
+         "foo"))))
+
+(deftest get-light-ids-for-name-test
+  (testing "Getting light ids from the config based on a name"
     (is (=
-         {:foo #{"abc"}}
-          (expand-single-light-group
-           [:foo #{:key-for-abc :key-for-xyz}]
-           {:key-for-abc "abc"})))
+         (get-light-ids-for-name
+          {:lights {:name-to-id {:light-foo "this-is-a-light-id"}}}
+          "light-foo")
+         #{"this-is-a-light-id"}))
     (is (=
-         {:foo #{}}
-          (expand-single-light-group
-           [:foo #{:key-for-abc :key-for-xyz}]
-           {})))))
+         (get-light-ids-for-name
+          {:lights 
+           {:name-to-id {}
+            :group-to-name {:light-foo #{"this-is-a-light-id"
+                                         "this-is-another-light-id"}}}}
+          "light-foo")
+         #{"this-is-a-light-id"
+           "this-is-another-light-id"}))
+    ; The test below is a regression from an actual bug
+    (is (=
+         (get-light-ids-for-name
+          {:lights 
+           {:group-to-name
+            {:light-foo #{"this-is-a-light-id"
+                          "this-is-another-light-id"}}}}
+          "light-foo")
+         #{"this-is-a-light-id"
+           "this-is-another-light-id"}))
+    (is (nil?
+         (get-light-ids-for-name
+          {:lights {:name-to-id {:light-foo "this-is-a-light-id"
+                                 :light-bar "this-is-another-light-id"}}}
+          "light-not-existing")))))
+                                 
+
+(deftest send-request-to-hue-test
+  (testing "Sending a request to Hue"
+    (defn mock-client-fn
+      [uri payload]
+      (and
+       (is
+        (= uri
+          "http://mock-host/api/mock-key/lights/1/state"))
+       (is
+        (= payload
+          {:body "{\"foo\":\"bar\"}"}))))
+    (is
+     (= (send-request-to-hue
+         "1"
+         mock-client-fn
+         "mock-host"
+         "mock-key"
+         {:foo "bar"})
+        true))))
