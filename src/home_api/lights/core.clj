@@ -15,7 +15,7 @@
   [config]
   (get-in config [:lights :bridge-key]))
 
-(defn filter-light-data-by-ids
+(defn is-light-uniqueid-in-set?
   "Returns true if light-id matches :uniqueid in the right element of the 
   light-tuple"
   [light-id-set light-tuple]
@@ -26,13 +26,14 @@
   "Slice the Hue lights state and return a sequence with the states for the
   light ids in the specified set. Essentially getting light states from ids."
   [bridge-host bridge-key light-id-set]
-  (filter
-   #(filter-light-data-by-ids light-id-set %)
-   (json/read-str (get
-                   (client/get
-                    (str "http://" bridge-host "/api/" bridge-key "/lights"))
-                   :body)
-                  :key-fn keyword)))
+  (into []
+        (filter
+         #(is-light-uniqueid-in-set? light-id-set %)
+         (json/read-str (get
+                         (client/get
+                          (str "http://" bridge-host "/api/" bridge-key "/lights"))
+                         :body)
+                        :key-fn keyword))))
 
 (defn get-hue-light-numbers
   "From a sequence of light state tuples from Hue, return an array of their 
