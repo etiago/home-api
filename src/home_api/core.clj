@@ -5,11 +5,12 @@
    [ring.middleware.keyword-params :refer [wrap-keyword-params]]
    [ring.middleware.reload :as reload]
    [clojure.tools.logging :as log]
-   [compojure.core :refer [defroutes ANY POST]]
+   [compojure.core :refer [defroutes ANY POST GET]]
    [ring.adapter.jetty :as jetty]
    [home-api.lights.core :as lights-resource]
    [home-api.commands.core :as commands-resource]
    [home-api.cameras.core :as cameras-resource]
+   [home-api.location.core :as location-resource]
    [home-api.common-tools.core :as common-tools])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
@@ -30,7 +31,14 @@
          {form-params :form-params}
          (commands-resource/commands
           static-config
-          form-params))))
+          form-params))
+   (POST "/location"
+         {form-params :form-params}
+         (location-resource/location
+          static-config
+          form-params))
+   (GET "/location/:person-id" [person-id]
+        (location-resource/location-for-person-id static-config person-id))))
 
 (defn -main []
   (jetty/run-jetty (wrap-params

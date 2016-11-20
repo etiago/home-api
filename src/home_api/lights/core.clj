@@ -27,7 +27,7 @@
   light ids in the specified set. Essentially getting light states from ids."
   [bridge-host bridge-key light-id-set]
   (filter
-   (partial filter-light-data-by-ids light-id-set)
+   #(filter-light-data-by-ids light-id-set %)
    (json/read-str (get
                    (client/get
                     (str "http://" bridge-host "/api/" bridge-key "/lights"))
@@ -39,8 +39,7 @@
   numbers."
   [light-states]
   (reduce
-   (fn [numbers state]
-     (conj numbers (name (first state))))
+   #(conj %1 (name (first %2)))
    []
    light-states))
 
@@ -90,8 +89,7 @@
                 {:on (state-fn (into {} light-states) light-number)}))))))
 
 (def state-functions
-  {:toggle (fn [light-states light-number]
-                      (not (light-is-on? light-states light-number)))
+  {:toggle #(not (light-is-on? %1 %2))
    :on (fn [_ _] true)
    :off (fn [_ _] false)})
 
@@ -126,8 +124,8 @@
 (defresource lights [config light-or-group-name]
   :allowed-methods [:post :put :get]
   :available-media-types ["text-html"]
-  :authorized? (partial common-tools/authorized? config)
-  :exists? (fn [ctx]
+  :authorized? #(common-tools/authorized? config %)
+  :exists? (fn [_]
              (if-let [light-ids (get-light-ids-for-name
                                  config
                                  light-or-group-name)]
@@ -143,10 +141,6 @@
   :handle-unauthorized (fn [_]
                          (json/write-str {:result false
                                           :reason "ERR_AUTH_FAILED"}))
-  :handle-ok (fn [ctx] (json/write-str {:result true}))
-  :post! (partial handle-light-resource-verb
-                  client/post
-                  config)
-  :put! (partial handle-light-resource-verb
-                 client/put
-                 config))
+  :handle-ok (fn [_] (json/write-str {:result true}))
+  :post! #(handle-light-resource-verb client/post config %)
+  :put! #(handle-light-resource-verb client/put config %))

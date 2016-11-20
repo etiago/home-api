@@ -21,7 +21,7 @@
     (filter
      identity
      (reduce
-      (partial #(conj %2 (get %1 %3)) name-to-id)
+      #(conj %1 (get name-to-id %2))
       #{}
       (second single-group))))})
 

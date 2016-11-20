@@ -31,7 +31,7 @@
        (map
         (fn [light-setting]
           (lights-resource/handle-light-request
-           (fn [_ _] (get (second light-setting) :on))
+           #(get (second light-setting) :on)
            client/put
            config
            (lights-resource/get-light-ids-for-name
@@ -49,13 +49,12 @@
   (resource
    :allowed-methods [:post :get]
    :available-media-types ["application/x-www-form-urlencoded"]
-   :authorized? (partial common-tools/authorized? config)
-   :malformed? (fn [ctx]
-                 (let [fp (get-in ctx [:request :form-params])]
-                   (if (or (not (contains? fp "command"))
-                           (not (contains? fp "language")))
-                     true
-                     [false {:command (get fp "command")
-                             :language (get fp "language")}])))
-   :post! (partial post-command-ok config)))
+   :authorized? #(common-tools/authorized? config %)
+   :malformed? #(let [fp (get-in % [:request :form-params])]
+                  (if (or (not (contains? fp "command"))
+                          (not (contains? fp "language")))
+                    true
+                    [false {:command (get fp "command")
+                            :language (get fp "language")}]))
+   :post! #(post-command-ok config %)))
 

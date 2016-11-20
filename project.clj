@@ -19,4 +19,5 @@
                  [clj-http "3.3.0"]
                  [slingshot "0.12.2"]
                  [org.tiago/dlink-camera-api "0.3.0"]
-                 [org.julienxx/clj-slack "0.5.4"]])
+                 [org.julienxx/clj-slack "0.5.4"]
+                 [clj-time "0.12.2"]])

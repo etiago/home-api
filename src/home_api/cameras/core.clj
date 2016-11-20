@@ -83,19 +83,15 @@
 (defn cameras
   [config location action]
   (let [handle-ok-fn (if (contains? config :camera-state-notifications)
-                       (partial handle-ok-with-notification action location (get-in config [:camera-state-notifications]))
-                       (partial handle-ok-without-notification action))]
+                       #(handle-ok-with-notification action location (get-in config [:camera-state-notifications]) %)
+                       #(handle-ok-without-notification action %))]
     (resource
      :available-media-types ["text-html"]
-     :authorized? (partial common-tools/authorized? config)
-     :exists? (fn [ctx]
-                (if-let [camera-config
-                         (get-camera-config-for-location config location)]
-                  {:camera-config camera-config}))
-     :handle-exception (fn [_]
-                         (json/write-str {:result false, :reason "ERR_UPSTREAM_FAILURE"}))
-     :handle-not-found (fn [_]
-                         (json/write-str {:result false, :reason "ERR_UNKNOWN_INPUT"}))
-     :handle-unauthorized (fn [_]
-                            (json/write-str {:result false, :reason "ERR_AUTH_FAILED"}))
+     :authorized? #(common-tools/authorized? config %)
+     :exists? #(if-let [camera-config
+                        (get-camera-config-for-location config location)]
+                 {:camera-config camera-config})
+     :handle-exception #(json/write-str {:result false, :reason "ERR_UPSTREAM_FAILURE"})
+     :handle-not-found #(json/write-str {:result false, :reason "ERR_UNKNOWN_INPUT"})
+     :handle-unauthorized #(json/write-str {:result false, :reason "ERR_AUTH_FAILED"})
      :handle-ok handle-ok-fn)))
